@@ -11,16 +11,19 @@ message User {
 	string token = 4;
 }
 
+// DTO
+
 message UserDTO {
 	int64 id = 1;
 	string username = 2;
 	string token = 3;
 }
 
-message UserAddDTO {
+message UserRegisterDTO {
 	string username = 1;
 	string password = 2;
 }
+
 
 message UserToken {
 	string token = 1;
@@ -30,10 +33,26 @@ message UserId {
 	int64 id = 1;
 }
 
-message UserVerifyAnswer {
+// Responses
+
+message Details {
 	bool success = 1;
-	int64 id = 2;
-	string username = 3;
+	string mess = 2;
+}
+
+message UserRegisterResponse {
+	Details details = 1;
+	UserDTO user = 2;
+}
+
+message UserResponse {
+	Details details = 1;
+	UserDTO user = 2;
+}
+
+message UserVerifyResponse {
+	Details details = 1;
+	UserDTO user = 2;
 }
 
 message UserLoginDTO {
@@ -41,11 +60,17 @@ message UserLoginDTO {
 	string password = 2;
 }
 
-service UserGrpcService {
-	rpc AddUser(UserAddDTO) returns (UserDTO) {}
-	rpc LoginUser(UserLoginDTO) returns (UserToken) {}
-	rpc VerifyUser(UserToken) returns (UserVerifyAnswer) {}
+message UserLoginResponse {
+	Details details = 1;
+	string token = 2;
+}
 
-	rpc GetUserById(UserId) returns (UserDTO) {}
-	rpc GetUserByTocken(UserToken) returns (UserDTO) {}
+
+service UserGrpcService {
+	rpc RegisterUser(UserRegisterDTO) returns (UserRegisterResponse) {}
+	rpc LoginUser(UserLoginDTO) returns (UserLoginResponse) {}
+	rpc VerifyUser(UserToken) returns (UserVerifyResponse) {}
+
+	rpc GetUserById(UserId) returns (UserResponse) {}
+	rpc GetUserByTocken(UserToken) returns (UserResponse) {}
 }	
