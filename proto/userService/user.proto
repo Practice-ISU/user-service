@@ -1,0 +1,31 @@
+syntax = "proto3";
+
+package proto_user;
+
+option go_package = "grpc-server/internal/api/grpc";
+
+message User {
+	int64 id = 1;
+	string username = 2;
+	string token = 3;
+}
+
+message UserAddDTO {
+  string username = 1;
+  string token = 2;
+}
+
+message UserToken {
+	string token = 1;
+}
+
+message UserVerifyAnswer {
+	bool success = 1;
+	int64 id = 2;
+	string username = 3;
+}
+
+service UserGrpcService {
+	rpc AddUser(UserAddDTO) returns (User) {}
+	rpc VerifyUser(UserToken) returns (UserVerifyAnswer) {}
+}	
