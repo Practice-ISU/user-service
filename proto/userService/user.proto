@@ -7,16 +7,27 @@ option go_package = "grpc-server/internal/api/grpc";
 message User {
 	int64 id = 1;
 	string username = 2;
+	string password = 3;
+	string token = 4;
+}
+
+message UserDTO {
+	int64 id = 1;
+	string username = 2;
 	string token = 3;
 }
 
 message UserAddDTO {
-  string username = 1;
-  string token = 2;
+	string username = 1;
+	string password = 2;
 }
 
 message UserToken {
 	string token = 1;
+}
+
+message UserId {
+	int64 id = 1;
 }
 
 message UserVerifyAnswer {
@@ -25,7 +36,16 @@ message UserVerifyAnswer {
 	string username = 3;
 }
 
+message UserLoginDTO {
+	string username = 1;
+	string password = 2;
+}
+
 service UserGrpcService {
-	rpc AddUser(UserAddDTO) returns (User) {}
+	rpc AddUser(UserAddDTO) returns (UserDTO) {}
+	rpc LoginUser(UserLoginDTO) returns (UserToken) {}
 	rpc VerifyUser(UserToken) returns (UserVerifyAnswer) {}
+
+	rpc GetUserById(UserId) returns (UserDTO) {}
+	rpc GetUserByTocken(UserToken) returns (UserDTO) {}
 }	
