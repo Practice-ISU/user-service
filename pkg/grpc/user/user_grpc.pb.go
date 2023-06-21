@@ -4,7 +4,7 @@
 // - protoc             v4.23.3
 // source: user.proto
 
-package grpc
+package usergrpc
 
 import (
 	context "context"
@@ -26,7 +26,7 @@ type UserGrpcServiceClient interface {
 	LoginUser(ctx context.Context, in *UserLoginDTO, opts ...grpc.CallOption) (*UserLoginResponse, error)
 	VerifyUser(ctx context.Context, in *UserToken, opts ...grpc.CallOption) (*UserVerifyResponse, error)
 	GetUserById(ctx context.Context, in *UserId, opts ...grpc.CallOption) (*UserResponse, error)
-	GetUserByTocken(ctx context.Context, in *UserToken, opts ...grpc.CallOption) (*UserResponse, error)
+	GetUserByToken(ctx context.Context, in *UserToken, opts ...grpc.CallOption) (*UserResponse, error)
 }
 
 type userGrpcServiceClient struct {
@@ -73,9 +73,9 @@ func (c *userGrpcServiceClient) GetUserById(ctx context.Context, in *UserId, opt
 	return out, nil
 }
 
-func (c *userGrpcServiceClient) GetUserByTocken(ctx context.Context, in *UserToken, opts ...grpc.CallOption) (*UserResponse, error) {
+func (c *userGrpcServiceClient) GetUserByToken(ctx context.Context, in *UserToken, opts ...grpc.CallOption) (*UserResponse, error) {
 	out := new(UserResponse)
-	err := c.cc.Invoke(ctx, "/proto_user.UserGrpcService/GetUserByTocken", in, out, opts...)
+	err := c.cc.Invoke(ctx, "/proto_user.UserGrpcService/GetUserByToken", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ type UserGrpcServiceServer interface {
 	LoginUser(context.Context, *UserLoginDTO) (*UserLoginResponse, error)
 	VerifyUser(context.Context, *UserToken) (*UserVerifyResponse, error)
 	GetUserById(context.Context, *UserId) (*UserResponse, error)
-	GetUserByTocken(context.Context, *UserToken) (*UserResponse, error)
+	GetUserByToken(context.Context, *UserToken) (*UserResponse, error)
 	mustEmbedUnimplementedUserGrpcServiceServer()
 }
 
@@ -110,8 +110,8 @@ func (UnimplementedUserGrpcServiceServer) VerifyUser(context.Context, *UserToken
 func (UnimplementedUserGrpcServiceServer) GetUserById(context.Context, *UserId) (*UserResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetUserById not implemented")
 }
-func (UnimplementedUserGrpcServiceServer) GetUserByTocken(context.Context, *UserToken) (*UserResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetUserByTocken not implemented")
+func (UnimplementedUserGrpcServiceServer) GetUserByToken(context.Context, *UserToken) (*UserResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetUserByToken not implemented")
 }
 func (UnimplementedUserGrpcServiceServer) mustEmbedUnimplementedUserGrpcServiceServer() {}
 
@@ -198,20 +198,20 @@ func _UserGrpcService_GetUserById_Handler(srv interface{}, ctx context.Context, 
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserGrpcService_GetUserByTocken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _UserGrpcService_GetUserByToken_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(UserToken)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UserGrpcServiceServer).GetUserByTocken(ctx, in)
+		return srv.(UserGrpcServiceServer).GetUserByToken(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/proto_user.UserGrpcService/GetUserByTocken",
+		FullMethod: "/proto_user.UserGrpcService/GetUserByToken",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserGrpcServiceServer).GetUserByTocken(ctx, req.(*UserToken))
+		return srv.(UserGrpcServiceServer).GetUserByToken(ctx, req.(*UserToken))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -240,8 +240,8 @@ var UserGrpcService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _UserGrpcService_GetUserById_Handler,
 		},
 		{
-			MethodName: "GetUserByTocken",
-			Handler:    _UserGrpcService_GetUserByTocken_Handler,
+			MethodName: "GetUserByToken",
+			Handler:    _UserGrpcService_GetUserByToken_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
