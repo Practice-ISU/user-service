@@ -19,26 +19,41 @@ func NewUserService(storage storage.UserStorage) *userService {
 	}
 }
 
-func (sv *userService) VerifyUser(tocken string) (*entity.User, error) {
-	return sv.storage.GetUserByTocken(tocken)
+func (sv *userService) VerifyUser(token string) (*entity.User, error) {
+	return sv.storage.GetUserByToken(token)
 }
 
-func (sv *userService) AddUser(username, password string) (*entity.User, error) {
+func (sv *userService) RegisterUser(username, password string) (*entity.User, error) {
 	result, _ := sv.storage.GetUserByUserName(username)
 
 	if result != nil {
 		return nil, fmt.Errorf("this user is already exists")
 	}
 
-	tockenBytes := sha256.Sum256([]byte(username))
-	token := hex.EncodeToString(tockenBytes[:])
+	tokenBytes := sha256.Sum256([]byte(username))
+	token := hex.EncodeToString(tokenBytes[:])
 	passwordBytes := sha256.Sum256([]byte(password))
 	passwordHash := hex.EncodeToString(passwordBytes[:])
 
 	dto := &dto.UserAddDTO{
 		UserName: username,
 		Password: passwordHash,
-		Tocken:   token,
+		Token:    token,
 	}
 	return sv.storage.AddUser(dto)
+}
+
+func (sv *userService) LoginUser(username, password string) (*entity.User, error) {
+	passwordBytes := sha256.Sum256([]byte(password))
+	passwordHash := hex.EncodeToString(passwordBytes[:])
+	return sv.storage.LoginUser(&dto.UserLoginDTO{UserName: username, Password: passwordHash})
+
+}
+
+func (sv *userService) GetUserById(id int64) (*entity.User, error) {
+	return sv.storage.GetUserById(id)
+}
+
+func (sv *userService) GetUserByToken(tocken string) (*entity.User, error) {
+	return sv.storage.GetUserByToken(tocken)
 }

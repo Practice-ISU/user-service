@@ -5,6 +5,10 @@ import (
 )
 
 type UserService interface {
-	AddUser(username string, password string) (*entity.User, error)
+	RegisterUser(username string, password string) (*entity.User, error)
 	VerifyUser(tocken string) (*entity.User, error)
+	LoginUser(username, password string) (*entity.User, error)
+	
+	GetUserById(id int64) (*entity.User, error)
+	GetUserByToken(tocken string) (*entity.User, error)
 }
