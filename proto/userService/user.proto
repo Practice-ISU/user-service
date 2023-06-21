@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package proto_user;
 
-option go_package = "grpc-server/internal/api/grpc";
+option go_package = "user-service/pkg/grpc/usergrpc";
 
 message User {
 	int64 id = 1;
@@ -72,5 +72,5 @@ service UserGrpcService {
 	rpc VerifyUser(UserToken) returns (UserVerifyResponse) {}
 
 	rpc GetUserById(UserId) returns (UserResponse) {}
-	rpc GetUserByTocken(UserToken) returns (UserResponse) {}
+	rpc GetUserByToken(UserToken) returns (UserResponse) {}
 }	
