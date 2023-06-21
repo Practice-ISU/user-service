@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package discovery_registration;
+
+option go_package = "user-service/pkg/grpc/discovery/registration";
+
+// Definition of ServiceRegistration to Discovery
+service ServiceRegistration {
+  // Method to register a service by name and channel and save it to the database.
+  rpc Registration(ServiceRequest) returns (ServiceResponse) {}
+}
+
+// Request message for registering a new service.
+message ServiceRequest {
+  string timestamp = 1;
+  string service_name = 2;
+  string channel = 3;
+}
+
+// Response message after registering a new service.
+message ServiceResponse {
+  string timestamp = 1;
+  bool success = 2;
+}

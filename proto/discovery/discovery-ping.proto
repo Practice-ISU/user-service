@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package discovery_ping;
+
+option go_package = "user-service/pkg/grpc/discovery/ping";
+
+service DiscoveryPing {
+  // Method to check availability of a registered service.
+  rpc Ping(PingRequest) returns (PingResponse) {}
+}
+
+// Request a message to check the connection with the service.
+message PingRequest {
+  string timestamp = 1;
+  string service_name = 2;
+}
+
+// Response message after checking the availability of the service.
+message PingResponse {
+  string timestamp = 1;
+  bool success = 2;
+}
