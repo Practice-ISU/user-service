@@ -1,15 +1,28 @@
 package registration
 
+import "os"
+
 type Config struct {
-	Port          string
 	ServiceName   string
 	DiscoveryAddr string
 }
 
-func GetDefaultConfig() *Config {
-	return &Config{
-		Port:          "8020",
-		ServiceName:   "user-service",
-		DiscoveryAddr: "localhost:5000",
+func GetConfig() *Config {
+	conf := &Config{
+		ServiceName:   "UserGrpcService",
+		DiscoveryAddr: "158.160.26.1:80",
 	}
+	serviceName := os.Getenv("SERVICE_NAME")
+	discoveryAddr := os.Getenv("DISCOVERY_ADDR")
+
+	if serviceName != "" {
+		conf.ServiceName = serviceName
+	}
+	if discoveryAddr != "" {
+		conf.DiscoveryAddr = discoveryAddr
+	}
+
+	return conf
+
+
 }
