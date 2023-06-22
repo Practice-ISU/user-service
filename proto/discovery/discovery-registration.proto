@@ -15,6 +15,7 @@ message ServiceRequest {
   string timestamp = 1;
   string service_name = 2;
   string channel = 3;
+  string channel_ping = 4;
 }
 
 // Response message after registering a new service.
