@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net"
 	"time"
+	mainconfig "user-service/configs/grpc/main"
 	ping_conf "user-service/configs/grpc/ping"
 	reg_conf "user-service/configs/grpc/registration"
+	user_conf "user-service/configs/grpc/user"
 	psql_conf "user-service/configs/postgre"
 	server "user-service/internal/adapters/api/grpc"
 	psql_stor "user-service/internal/adapters/db/postgre"
@@ -19,6 +22,11 @@ import (
 )
 
 func main() {
+	mainConfig := mainconfig.GetMainConfig()
+	userConfig := user_conf.GetConfig()
+	pingConf := ping_conf.GetConfig()
+	regCong := reg_conf.GetConfig()
+
 	userStorage, err := psql_stor.NewUserStorage(psql_conf.GetDefaultConfig())
 	if err != nil {
 		panic(err)
@@ -29,44 +37,50 @@ func main() {
 	s := grpc.NewServer()
 	user_grpc.RegisterUserGrpcServiceServer(s, userServer)
 
-	l, err := net.Listen("tcp", ":8080")
+	userListener, err := net.Listen("tcp", mainConfig.IpAddr+":"+userConfig.Port)
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("IP " + userConfig.ServiceName + " = " + userListener.Addr().String())
 
-	pingConf := ping_conf.GetDefaultConfig()
-	sp, err := ping.NewDiscoveryPingServer(
+	pingServer, err := ping.NewDiscoveryPingServer(
 		pingConf,
-		reg_conf.GetDefaultConfig(),
+		regCong,
+		mainConfig,
+		userConfig,
 	)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	discoveryServer := grpc.NewServer()
-	ping_grpc.RegisterDiscoveryPingServer(discoveryServer, sp)
+	ping_grpc.RegisterDiscoveryPingServer(s, pingServer)
 
-	l2, err := net.Listen("tcp", ":8010")
+	pingListener, err := net.Listen("tcp", mainConfig.IpAddr+":"+pingConf.Port)
 	if err != nil {
 		log.Fatal(err)
 	}
+	fmt.Println("IP PingGrpcServer = " + pingListener.Addr().String())
+
 	go func() {
-		err = discoveryServer.Serve(l2)
+		err = s.Serve(pingListener)
 		if err != nil {
 			log.Fatal(err)
 		}
 	}()
 
 	go func() {
+		pingServer.SendRegistrationRequest()
+	}()
+
+	go func() {
 		for {
-			sp.StartTimeout(sp.SendRegistrationRequest)
-			time.Sleep(1 * time.Second)
+			pingServer.StartTimeout(pingServer.SendRegistrationRequest)
+			time.Sleep(12 * time.Second)
 		}
 	}()
 
-	err = s.Serve(l)
+	err = s.Serve(userListener)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
