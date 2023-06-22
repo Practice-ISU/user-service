@@ -26,7 +26,7 @@ func (serv *userServer) RegisterUser(ctx context.Context, dto *user_grpc.UserReg
 				Mess:    err.Error(),
 			},
 			User: nil,
-		}, err
+		}, nil
 	}
 	user := &user_grpc.UserDTO{
 		Id:       result.Id,
