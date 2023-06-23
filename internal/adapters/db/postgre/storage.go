@@ -3,12 +3,14 @@ package postgre
 import (
 	"database/sql"
 	"fmt"
-	psql_conf "user-service/configs/postgre"
 	"user-service/internal/domain/dto"
 	"user-service/internal/domain/entity"
 	"user-service/internal/domain/storage"
-	psql "user-service/pkg/clients/postgre"
 )
+
+type DbClient interface {
+	GetDb() (*sql.DB, error)
+}
 
 type rowScanner interface {
 	Scan(dest ...any) error
@@ -24,25 +26,26 @@ func readUserFromRow(rs rowScanner) (*entity.User, error) {
 }
 
 type userStorage struct {
-	db *sql.DB
+	dbClient DbClient
 }
 
-func NewUserStorage(conf *psql_conf.Config) (storage.UserStorage, error) {
-	db, err := psql.GetDb(conf)
-	if err != nil {
-		return nil, err
-	}
+func NewUserStorage(dbClient DbClient) storage.UserStorage {
 	return &userStorage{
-		db: db,
-	}, nil
+		dbClient: dbClient,
+	}
 }
 
 func (st *userStorage) getUserWithWhereCase(wherecase string) (*entity.User, error) {
+	db, err := st.dbClient.GetDb()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
 	stmt := `SELECT id, username, token FROM users`
 	if wherecase != "" {
 		stmt += " WHERE " + wherecase
 	}
-	result := st.db.QueryRow(stmt)
+	result := db.QueryRow(stmt)
 	return readUserFromRow(result)
 }
 
@@ -59,9 +62,14 @@ func (st *userStorage) GetUserByToken(token string) (*entity.User, error) {
 }
 
 func (st *userStorage) AddUser(dto *dto.UserAddDTO) (*entity.User, error) {
+	db, err := st.dbClient.GetDb()
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
 	stmt := fmt.Sprintf(`INSERT INTO users (username, token, password) VALUES %s`, dto.ExtractInsertSQL())
 	var id int64
-	err := st.db.QueryRow(stmt + "RETURNING id;").Scan(&id)
+	err = db.QueryRow(stmt + "RETURNING id;").Scan(&id)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +77,7 @@ func (st *userStorage) AddUser(dto *dto.UserAddDTO) (*entity.User, error) {
 	return &entity.User{
 		Id:       id,
 		Username: dto.UserName,
-		Token:   dto.Token,
+		Token:    dto.Token,
 		Password: dto.Password,
 	}, nil
 }
