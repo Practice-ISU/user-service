@@ -33,7 +33,10 @@ type DiscoveryPingServer struct {
 
 func NewDiscoveryPingServer(cnfPing *ping_conf.Config, cnfReg *reg_conf.Config, cnfMain *main_conf.MainConfig, cnfService ServiceConfig) (*DiscoveryPingServer, error) {
 	fmt.Println("Discovery chanel = " + cnfReg.DiscoveryAddr)
-	conn, err := grpc.Dial(cnfReg.DiscoveryAddr, grpc.WithInsecure())
+	options := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+	conn, err := grpc.Dial(cnfReg.DiscoveryAddr, options...)
 	if err != nil {
 		return nil, err
 	}
@@ -52,31 +55,30 @@ func NewDiscoveryPingServer(cnfPing *ping_conf.Config, cnfReg *reg_conf.Config, 
 
 func (s *DiscoveryPingServer) Ping(context.Context, *ping.PingRequest) (*ping.PingResponse, error) {
 	s.lastCallTime = time.Now()
-	fmt.Println("Pinged in " + s.lastCallTime.Format("2006-01-02 HH15:04:05.000"))
+	// fmt.Println("Pinged in", s.lastCallTime.String())
 	return &ping.PingResponse{
-		Timestamp: time.Now().Format("2006-01-02 HH15:04:05.000"),
+		Timestamp: time.Now().Format("2006-01-02 15:04:05.000"),
 		Success:   true,
 	}, nil
 }
 
 func (s *DiscoveryPingServer) SendRegistrationRequest() {
 	for {
-		result, err := s.register.Registration(context.TODO(), &registration.ServiceRequest{
-			Timestamp:   time.Now().Format("2006-01-02 HH15:04:05.000"),
+		data := &registration.ServiceRequest{
+			Timestamp:   time.Now().Format("2006-01-02 15:04:05.000"),
 			ServiceName: s.serviceName,
-			Channel:     s.ip + ":" + s.servicePort,
-			ChannelPing: s.ip + ":" + s.pingPort,
-		})
+			Channel:     "http://" + s.ip + ":" + s.servicePort,
+			ChannelPing: "http://" + s.ip + ":" + s.pingPort,
+		}
+		result, err := s.register.Registration(context.TODO(), data)
 
 		if err != nil {
 			fmt.Println(err.Error())
+			break
 		}
 
-		fmt.Println("tried")
-
 		if result.Success {
-			fmt.Printf("registered in %s", result.Timestamp)
-			fmt.Println(result.Success, result.Timestamp)
+			fmt.Println("registered in", result.Timestamp, "success -", result.Success)
 			break
 		}
 		time.Sleep(time.Minute)
@@ -84,12 +86,10 @@ func (s *DiscoveryPingServer) SendRegistrationRequest() {
 }
 
 func (s *DiscoveryPingServer) StartTimeout(f func()) {
-
-	time.AfterFunc(10 * time.Second, func() {
-		if time.Since(s.lastCallTime) > 10 * time.Second {
-			fmt.Println("Timer is over!!!")
-		} else {
-			fmt.Println("Time is not over!!!")
+	time.AfterFunc(6 * time.Minute, func() {
+		if time.Since(s.lastCallTime) > 6 * time.Minute {
+			fmt.Println("Lost ping from discovery-service!")
+			f()
 		}
 	})
 
