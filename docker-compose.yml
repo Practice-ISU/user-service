@@ -1,0 +1,60 @@
+version: '3.8'
+
+x-variables:
+  POSTGRES_HOST: localhost
+  POSTGRES_DBNAME: user_db
+  POSTGRES_PORT: 5432
+  POSTGRES_USER: user-supervisor
+  POSTGRES_PASSWORD: qwer
+  POSTGRES_SSL_MODE: disable
+  PORT_PING: 8010
+  PORT_USERS: 8000
+
+services:
+  db:
+    image: postgres
+    container_name: psql
+    environment:
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: user_db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: user-supervisor
+      POSTGRES_PASSWORD: qwer
+      POSTGRES_SSL_MODE: disable
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+
+  user-service:
+    container_name: user-service
+    build: .
+    # extra_hosts:
+    #   - "discovery:158.160.26.1"
+    cpu_shares: 512
+    mem_limit: 1g
+
+    environment:
+      SERVICE_NAME: UserGrpcService
+      DISCOVERY_ADDR: 158.160.26.1:80
+      SERVICE_IP: 84.201.139.249
+      POSTGRES_HOST: db
+      POSTGRES_DBNAME: user_db
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: user-supervisor
+      POSTGRES_PASSWORD: qwer
+      POSTGRES_SSL_MODE: disable
+      PORT_PING: 8010
+      PORT_USERS: 8000
+      GRPC_GO_LOG_VERBOSITY_LEVEL: '99'
+      HTTP_PROXY: 158.160.26.1:80
+
+      # GRPC_GO_LOG_SEVERITY_LEVEL: 'info'
+      GRPC_TRACE: 'all'
+      GRPC_VERBOSITY: 'DEBUG'
+
+    ports:
+      - "8010:8010"
+      - "8000:8000"
+    depends_on:
+      - db
