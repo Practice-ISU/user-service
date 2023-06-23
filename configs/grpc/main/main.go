@@ -8,7 +8,7 @@ type MainConfig struct {
 
 func GetMainConfig() *MainConfig {
 	conf := &MainConfig{
-		IpAddr: "192.168.207.152",
+		IpAddr: "127.0.0.1",
 	}
 	ip := os.Getenv("SERVICE_IP")
 	if ip != "" {
