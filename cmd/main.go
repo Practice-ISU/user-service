@@ -5,6 +5,7 @@ import (
 	"log"
 	"net"
 	"time"
+
 	mainconfig "user-service/configs/grpc/main"
 	ping_conf "user-service/configs/grpc/ping"
 	reg_conf "user-service/configs/grpc/registration"
@@ -13,10 +14,11 @@ import (
 	server "user-service/internal/adapters/api/grpc"
 	psql_stor "user-service/internal/adapters/db/postgre"
 	"user-service/internal/domain/service"
-	ping_grpc "user-service/pkg/grpc/discovery/ping"
+	"user-service/pkg/api/grpc/ping"
 	user_grpc "user-service/pkg/grpc/user"
 
-	"user-service/pkg/api/grpc/ping"
+	"user-service/pkg/clients/postgre"
+	ping_grpc "user-service/pkg/grpc/discovery/ping"
 
 	"google.golang.org/grpc"
 )
@@ -26,18 +28,17 @@ func main() {
 	userConfig := user_conf.GetConfig()
 	pingConf := ping_conf.GetConfig()
 	regCong := reg_conf.GetConfig()
+	psqlConf := psql_conf.GetConfig()
 
-	userStorage, err := psql_stor.NewUserStorage(psql_conf.GetDefaultConfig())
-	if err != nil {
-		panic(err)
-	}
+	userStorage := psql_stor.NewUserStorage(postgre.NewPsqlCliennt(psqlConf))
+
 	userSevice := service.NewUserService(userStorage)
 	userServer := server.NewUserServer(userSevice)
 
 	s := grpc.NewServer()
 	user_grpc.RegisterUserGrpcServiceServer(s, userServer)
 
-	userListener, err := net.Listen("tcp", mainConfig.IpAddr+":"+userConfig.Port)
+	userListener, err := net.Listen("tcp", ":"+userConfig.Port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -55,7 +56,7 @@ func main() {
 
 	ping_grpc.RegisterDiscoveryPingServer(s, pingServer)
 
-	pingListener, err := net.Listen("tcp", mainConfig.IpAddr+":"+pingConf.Port)
+	pingListener, err := net.Listen("tcp", ":"+pingConf.Port)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,6 +65,7 @@ func main() {
 	go func() {
 		err = s.Serve(pingListener)
 		if err != nil {
+			fmt.Println("ой ой ой")
 			log.Fatal(err)
 		}
 	}()
@@ -75,12 +77,13 @@ func main() {
 	go func() {
 		for {
 			pingServer.StartTimeout(pingServer.SendRegistrationRequest)
-			time.Sleep(12 * time.Second)
+			time.Sleep(6 * time.Minute)
 		}
 	}()
 
 	err = s.Serve(userListener)
 	if err != nil {
+		fmt.Println("Упал user-server")
 		log.Fatal(err)
 	}
 }
