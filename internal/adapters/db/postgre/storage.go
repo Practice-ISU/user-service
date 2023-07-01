@@ -54,11 +54,21 @@ func (st *userStorage) GetUserByUserName(username string) (*entity.User, error) 
 }
 
 func (st *userStorage) GetUserById(id int64) (*entity.User, error) {
-	return st.getUserWithWhereCase(fmt.Sprintf(`id = %d`, id))
+	user, err := st.getUserWithWhereCase(fmt.Sprintf(`id = %d`, id))
+	if user == nil {
+		return nil, fmt.Errorf("invalid id")
+	}
+
+	return user, err
 }
 
 func (st *userStorage) GetUserByToken(token string) (*entity.User, error) {
-	return st.getUserWithWhereCase(fmt.Sprintf(`token = '%s'`, token))
+	user, err := st.getUserWithWhereCase(fmt.Sprintf(`token = '%s'`, token))
+	if user == nil {
+		return nil, fmt.Errorf("invalid token")
+	}
+
+	return user, err
 }
 
 func (st *userStorage) AddUser(dto *dto.UserAddDTO) (*entity.User, error) {
@@ -83,5 +93,9 @@ func (st *userStorage) AddUser(dto *dto.UserAddDTO) (*entity.User, error) {
 }
 
 func (st *userStorage) LoginUser(dto *dto.UserLoginDTO) (*entity.User, error) {
-	return st.getUserWithWhereCase(dto.ExtractWhereSQL())
+	user, err := st.getUserWithWhereCase(dto.ExtractWhereSQL())
+	if user == nil {
+		return nil, fmt.Errorf("no such username or bad password")
+	}
+	return user, err
 }

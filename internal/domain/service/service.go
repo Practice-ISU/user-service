@@ -54,6 +54,6 @@ func (sv *userService) GetUserById(id int64) (*entity.User, error) {
 	return sv.storage.GetUserById(id)
 }
 
-func (sv *userService) GetUserByToken(tocken string) (*entity.User, error) {
-	return sv.storage.GetUserByToken(tocken)
+func (sv *userService) GetUserByToken(token string) (*entity.User, error) {
+	return sv.storage.GetUserByToken(token)
 }
